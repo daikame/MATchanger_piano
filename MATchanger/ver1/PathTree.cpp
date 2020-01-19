@@ -6,57 +6,49 @@
 #include<fstream>
 //#include "Path.cpp"
 
-#define Fname "/home/dai/MATchanger/ver1/output_trace"
+#define Fname "/home/dai/git/MATchanger_piano/MATchanger/ver1/output_trace"
 //関数プロトタイプ宣言
 
-//
 
-struct Block  
+struct Block  									//データブロック宣言
    {
-        std::string addr; //アドレス
-        int label;        //リーフラベル
- 	Block *blockAddr;       
-	
+        std::string addr; 							//アドレス
+        int label;        							//リーフラベル
+ 	Block *blockAddr;       						//ブロックの自アドレス
    };
 
-
-
-struct SNode
+struct SNode									//ノードの宣言
    {
-        std::string hand; //left or right
-        SNode *pChild[2]; //子バケツのアドレス
-        SNode *pRoot;     //親バケツのアドレス
-        SNode *myAddr;    //バケツの実アドレス（child_listに入れる前のアドレス）
-        Block *block;     //バケツ内のブロック
+        std::string hand; 							//left or right
+        SNode *pChild[2]; 							//子バケツのアドレス
+        SNode *pRoot;     							//親バケツのアドレス
+        SNode *myAddr;    							//バケツの自アドレス（child_listに入れる前のアドレス）
+        Block *block;     							//バケツ内のブロックのアドレス
    };
 
-   //block = new SNode[10];
-
-
-//void InitNode(SNode* updateNode,SNode* tmpNode){
+//ノードの初期化関数
 void InitNodeL(SNode& updateNode,SNode& tmpNode,int numberblock){
-   updateNode.pRoot=tmpNode.myAddr;
-   updateNode.myAddr=&updateNode;
-   for(int t=0;t<numberblock;t++){
-   	updateNode.block[t].addr="0";
-   	updateNode.block[t].label=0;
-	updateNode.block[t].blockAddr=&updateNode.block[t];
-	updateNode.hand = "left";
+   updateNode.pRoot=tmpNode.myAddr;						//子ノードの親のアドレス
+   updateNode.myAddr=&updateNode;						//自アドレスにそのノードの実アドレスを格納
+   for(int t=0;t<numberblock;t++){						//ノード内のブロック数分繰り返し
+   	updateNode.block[t].addr="0";						//子ノードのアドレスの初期化
+   	updateNode.block[t].label=0;						//子ノードのラベルの初期化
+	updateNode.block[t].blockAddr=&updateNode.block[t];			//自アドレスにそのデータブロックの実アドレスを格納
+	updateNode.hand = "left";						//左の手から生まれた子
    }
 }
 void InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock){
-   updateNode.pRoot=tmpNode.myAddr;
-   updateNode.myAddr=&updateNode;
-   for(int t=0;t<numberblock;t++){
-   	updateNode.block[t].addr="0";
-   	updateNode.block[t].label=0;
-	updateNode.block[t].blockAddr=&updateNode.block[t];
-	updateNode.hand = "right";
+   updateNode.pRoot=tmpNode.myAddr;						//子ノードの親のアドレス
+   updateNode.myAddr=&updateNode;						//自アドレスにそのノードの実アドレスを格納
+   for(int t=0;t<numberblock;t++){						//ノード内のブロック数分繰り返し
+   	updateNode.block[t].addr="0";						//子ノードのアドレスの初期化
+   	updateNode.block[t].label=0;						//子ノードのラベルの初期化
+	updateNode.block[t].blockAddr=&updateNode.block[t];			//自アドレスにそのデータブロックの実アドレスを格納
+	updateNode.hand = "right";						//右の手から生まれた子
    }
 }
 
-
-// ２つの子を生成
+// ２つの子を生成する関数
 void AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int numberblock)
 {
    //子バケツのメモリ領域の確保
@@ -67,153 +59,113 @@ void AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int numberblock)
    tmpNode->pChild[0]->block = new Block[numberblock];
    tmpNode->pChild[1]->block = new Block[numberblock];
 
-
    std::cout<<"list挿入前"<<tmpNode->pChild[0]<<std::endl;
  
    SNode node1,node2,node3;
-   //tmpNode->pChild[0] = &node1;
-   //tmpNode->pChild[1] = &node2;
-   //&node3 = tmpNode;
-   //node3.label = 0;
-	 // Node 初期化処理 
-   InitNodeL(*tmpNode->pChild[0],*tmpNode,numberblock);
-   InitNodeR(*tmpNode->pChild[1],*tmpNode,numberblock);
-   std::cout<<"init前"<<tmpNode->pChild[0]<<std::endl;
-   //InitNode(&node1,tmpNode);
-   //InitNode(&node2,tmpNode);
-   
-   // child_listから，tmpNodeを検索して，そのtmpNodeを削除
-   //or 
-   // pop_front listを使う
-   //SNode child0,child1;
-   //tmpNode->pChild[0]=&child0;
-   //tmpNode->pChild[1]=&child1;
-   std::cout<<"init後"<<tmpNode->pChild[0]<<std::endl;
 
-   child_list.push_back(*tmpNode->pChild[0]);	//リストの後ろに子供追加
-   child_list.push_back(*tmpNode->pChild[1]);	//
-   //std::cout<< child_list.size()<<std::endl;
-   child_list.pop_front();			//先頭の親を削除
-   //std::cout<< child_list.size()<<std::endl;
-   std::cout<<"list後"<<&child_list.front()<<std::endl;
-   
-   //return child_list;
-   //std::cout<<node3.label<<std::endl;
-   
+   InitNodeL(*tmpNode->pChild[0],*tmpNode,numberblock);				//初期化関数　L
+   InitNodeR(*tmpNode->pChild[1],*tmpNode,numberblock);				//初期化関数　R
+   //std::cout<<"init前"<<tmpNode->pChild[0]<<std::endl;
+   //std::cout<<"init後"<<tmpNode->pChild[0]<<std::endl;
+
+   child_list.push_back(*tmpNode->pChild[0]);					//子供リストの後ろに子供追加
+   child_list.push_back(*tmpNode->pChild[1]);					//子供リストの後ろに子供追加
+   child_list.pop_front();							//先頭の親を削除
+   std::cout<<"list挿入後"<<&child_list.front()<<std::endl;
    std::cout<<"in Allocate "<<child_list.front().pRoot<<std::endl;
-   //std::cout<<"in Allocate "<<&child_list.front().pRoot<<std::endl;
 }
 
- //親までたどってスタッシュにアドレスとラベルを読み込む関数
-//std::vector<unsigned> 
+//パス読み込み関数 
 void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel){	//本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
    
-   //ファイルオープン
-   std::ofstream ofs(Fname, std::ios::app);
+   std::ofstream ofs(Fname, std::ios::app);					//ファイルオープン 
    if(!ofs)
    {
    	std::cout << "ファイルが開けませんでした。" << std::endl;
         //std::cin.get();
         return ;
    }   
-   
-
-   //leaflabelのノードにアクセスするためにイテレータの移動
+   //読み込みたいパスのリーフラベルのノードにアクセスするためにイテレータを移動
    auto itr = child_list.begin();
    for(int s=1;s<leaflabel;s++){
 	++itr;
    }
-   SNode* tmpnode = itr->myAddr;        //*tmpnodeに現在のリーフノードのアドレスを渡している
-   //スタッシュに繰り返しデータを入れる作業
-   Block  tmpblock;
-   int uu=0;
-   int cd=0;
-   while(tmpnode != NULL){
-  // std::cout<<tmpnode->block[1].addr<<std::endl;
-	//現在ブロックが０になるまで繰り返し
-	for(int p = numberblock-1;0<=p;p--){
-		//tmpblockに今現在のブロックのデータを渡す		
-		tmpblock.addr = tmpnode->block[p].addr;
-		tmpblock.label = tmpnode->block[p].label;
+   SNode* tmpnode = itr->myAddr;        					//*tmpnodeに読み込みたいリーフノードのアドレスを渡している
 
-		//本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
-		if(tmpblock.addr==address){
+   //スタッシュに繰り返しデータを入れるwhile文
+   Block  tmpblock;								//ブロックの宣言
+   int cleancounter=0;
+   int stashin=0;								//スタッシュに格納した回数
+   while(tmpnode != NULL){							//スタッシュに繰り返し
+	for(int p = numberblock-1;0<=p;p--){
+		tmpblock.addr = tmpnode->block[p].addr;				//tmpblockに今操作しているブロックのアドレス情報を渡す
+		tmpblock.label = tmpnode->block[p].label;			//tmpblockに今操作しているブロックのラベル情報を渡す
+
+		if(tmpblock.addr==address){					//要求されたリクエストのアドレスをスタッシュに読み込む前に、ラベルを更新する
 			tmpblock.label=NewLabel;
 		}
-		//パス内のブロックのアドレスとラベルを０にしてブロックを空にする
-		tmpnode->block[p].addr="0";
-		//labelは葉のーどにものは変える必要ない
-		if(uu!=0){	//uuが０ならラベル変えない
+
+		//アクセス中のパスを空っぽにするための操作
+		tmpnode->block[p].addr="0";					//パス内のブロックのアドレスとラベルを０にしてブロックを空にする
+		if(cleancounter!=0){							//葉ノード以外のノードのブロックのラベルは0にする
 	      		tmpnode->block[p].label=0; 	
 		}
          
-		if(tmpblock.addr != "0"){		//アドレスが０なら読み込まない	
-		//ファイル出力
-		ofs <<tmpblock.addr<<" READ"<<std::endl;
-
-		//stash_listに詰めていく
-		stash_list.push_back(tmpblock);
-		cd++;
+		if(tmpblock.addr != "0"){					//ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）	
+		ofs <<tmpblock.addr<<" READ"<<std::endl;			//トレースファイルの出力
+		stash_list.push_back(tmpblock);					//スタッシュにデータブロックを格納していく
+		stashin++;
 		}
    	}
-
-	tmpnode = tmpnode->pRoot;//親ノードに移動
-	uu++;	
+	tmpnode = tmpnode->pRoot;						//親ノードに移動
+	cleancounter++;	
    }
-   auto itr1 = stash_list.begin();
- //  std::cout<<"address"<<stash_list.size()<<"S"<<std::endl;
-     for(int v=0;v<cd-1;v++){
-	itr1++;
 
-  // std::cout<<"aess"<<itr1->addr<<"S"<<std::endl;
-     }
-   //std::cout<<"address"<<itr1->addr<<"S"<<std::endl;
-   
-   ofs.close();
+  auto itr1 = stash_list.begin();						//itr1をスタッシュの先頭に設置(確認用?)
+  for(int v=0;v<stashin-1;v++){							//スタッシュに格納した分イテレータを移動している
+	itr1++;
+  }  
+  ofs.close();									//ファイルクローズ
 }
 
 //パス書き込みで各ノードに格納可能な左側リーフラベルを調べる関数
 int Leftchecker(SNode* checkNode){
-   SNode *tmp_node1 = checkNode;
-   int mostleftlabel; 
+   SNode *tmp_node1 = checkNode;			
+   int mostleftlabel; 								//最も左にあるラベルを見つけるための宣言
    mostleftlabel = tmp_node1->block[0].label;
    while(tmp_node1->pChild[0] != NULL){
       tmp_node1 = tmp_node1->pChild[0];
-      mostleftlabel=tmp_node1->block[0].label;//ここでブロックは0でも1でもよい  ０のほうが無難
+      mostleftlabel=tmp_node1->block[0].label;					//ここでブロックは0でも1でもよい  ０のほうが無難
    }
 	return mostleftlabel;
 }
+
 //パス書き込みで各ノードに格納可能な右側リーフラベルを調べる関数
 int Rightchecker(SNode* checkNode){
    SNode *tmp_node2 = checkNode;
-   int mostrightlabel;
+   int mostrightlabel;								//最も右にあるラベルを見つけるための宣言
    mostrightlabel = tmp_node2->block[0].label;
    while(tmp_node2->pChild[1] != NULL){
       tmp_node2 = tmp_node2->pChild[1];
-      mostrightlabel=tmp_node2->block[0].label;//ここでブロックは0でも1でもよい
+      mostrightlabel=tmp_node2->block[0].label;					//ここでブロックは0でも1でもよい
    }
    	return mostrightlabel;
 }
 
 //初パス書き込み
-void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){	//アドレスと対象ノードのリーフノード
-//leaflabelのノードにアクセスするためにイテレータの移動
-   auto itr = child_list.begin();
+void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){	
+
+   auto itr = child_list.begin();						//leaflabelのノードにアクセスするためにイテレータの移動
    for(int s=1;s<leaflabel;s++){
 	++itr;
    }
-   //std::cout<<"リーフラベルからリーフノードにあくせすしたラベル"<<itr->myAddr<<std::endl;
 
-//リーフノードから各パスの空いている部分にデータを格納
-   SNode* tmpnode = itr->myAddr; 	//*tmpnodeに現在のリーフノードのアドレスを渡している
-//現在のノードの親がルートになれば終了
+   //リーフノードから各パスの空いている部分にデータを格納
+   SNode* tmpnode = itr->myAddr; 						//*tmpnodeに現在のリーフノードのアドレスを渡している
    
 int k = 0;
    while(tmpnode != NULL){
-   	//std::cout<<"nannde"<<std::endl;
    	std::cout<<tmpnode->block[1].addr<<std::endl;
-	
-	
 	//現在ブロックが０になるまで繰り返し
 	int s;
 	for(int p = numberblock-1;0<=p;p--){
@@ -227,38 +179,12 @@ int k = 0;
 			break;//ちっちゃいfor文抜ける
 		}
 	}
-        //std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
    	if(tmpnode->block[s].addr==address){
 		break;
   	}
-#if 0
-	if(tmpnode->block[s].addr=="0"){
-		tmpnode->block[s].addr = address;
-   		//std::cout<<tmpnode->block[s].addr<<","<<address<<std::endl;
-
-		tmpnode->block[s].label = leaflabel; 
-		break;		//でっかいwhile文抜ける用
-	}
-#endif
 		tmpnode = tmpnode->pRoot;//親ノードに移動
 	
    }
-
-   
-   //std::cout<<" frontアドレス："<<&child_list.front().label<<std::endl;
-   //std::cout<<" backアドレス："<<&child_list.back().label<<std::endl;
-   //std::cout<<"frontの１っこ上のアドレス"<<&child_list.front().pRoot->label<<std::endl;
-   //std::cout<<"backの１っこ上のアドレス"<<&child_list.back().pRoot->label<<std::endl;
-   
-    
-	//上記のwhile文を抜けたということは、そのノードは書き込みが行える
-	//std::cout<<"パスに書き込みが行えました。"<<std::endl;
-	//tmpnode->addr =address;
-	//tmpnode->label =leaflabel; 
-    	
-   
- 
-
 }
 
 
@@ -521,7 +447,7 @@ int main() {
    //std::cout<<"ノードがpop_frontされても事実上消えていないことの確認"<<root.label<<std::endl;
     //std::cout<<"    "<<child_list.front().myAddr->block[0].addr<<std::endl;
    
-   TraceToRoot(2,stash_list,child_list,2,"dame",4); 
+   TraceToRoot(2,stash_list,child_list,2,"daga",4); 
    //TraceToRoot(1,stash_list,child_list,2,"dada",6); 
    auto itr1 = stash_list.begin();
    //std::cout<<"address"<<stash_list.size()<<"S"<<std::endl;
@@ -540,7 +466,7 @@ int main() {
    auto itr2 = child_list.begin();
    //itr2++;
    std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->pRoot->pRoot->block[0].addr<<std::endl;
-   std::cout<<"dagaきてくれ"<<itr2->myAddr->block[1].addr<<std::endl;
+   std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->block[1].addr<<std::endl;
    std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->pRoot->block[0].addr<<std::endl;
    
    return 0;
