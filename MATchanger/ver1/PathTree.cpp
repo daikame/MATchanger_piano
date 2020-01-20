@@ -159,31 +159,32 @@ void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,in
    for(int s=1;s<leaflabel;s++){
 	++itr;
    }
-
    //リーフノードから各パスの空いている部分にデータを格納
    SNode* tmpnode = itr->myAddr; 						//*tmpnodeに現在のリーフノードのアドレスを渡している
    
-int k = 0;
+ //  int k = 0;
+   int p=0;	
+   int s=0;						//変更中
    while(tmpnode != NULL){
-   	std::cout<<tmpnode->block[1].addr<<std::endl;
 	//現在ブロックが０になるまで繰り返し
-	int s;
-	for(int p = numberblock-1;0<=p;p--){
-		std::cout<<"FF"<<std::endl;
+	//int s;
+		std::cout<<"ps"<<std::endl;
+	for(p = numberblock-1;0<=p;p--){
+		std::cout<<"as"<<std::endl;
 		if(tmpnode->block[p].addr=="0"){
-			std::cout<<"GG"<<std::endl;
 			tmpnode->block[p].addr = address;
 			tmpnode->block[p].label = leaflabel; 
 			s=p;
+			std::cout<<s<<std::endl;
         		std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
-			break;//ちっちゃいfor文抜ける
+			break;							//ちっちゃいfor文抜ける
 		}
 	}
    	if(tmpnode->block[s].addr==address){
 		break;
   	}
-		tmpnode = tmpnode->pRoot;//親ノードに移動
-	
+	std::cout<<"upnode"<<std::endl;
+	tmpnode = tmpnode->pRoot;						//ひとつ上のノードに移動
    }
 }
 
