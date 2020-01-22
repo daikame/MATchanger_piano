@@ -162,13 +162,9 @@ void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,in
    //リーフノードから各パスの空いている部分にデータを格納
    SNode* tmpnode = itr->myAddr; 						//*tmpnodeに現在のリーフノードのアドレスを渡している
    
- //  int k = 0;
-   int p=0;	
-   int s=0;						//変更中
+   int p=0;									//ブロック番号
+   int s=0;									//
    while(tmpnode != NULL){
-	//現在ブロックが０になるまで繰り返し
-	//int s;
-		std::cout<<"ps"<<std::endl;
 	for(p = numberblock-1;0<=p;p--){
 		std::cout<<"as"<<std::endl;
 		if(tmpnode->block[p].addr=="0"){
@@ -189,42 +185,35 @@ void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,in
 }
 
 
-//パス更新
-void PathUpdate(int leaflabel,int numberblock,int method,int GB,std::list<SNode> &child_list,std::list<Block> &stash_list){
-//実アドレスでパスを埋めるフェーズ
-   //leaflabelのノードにアクセスするためにイテレータの移動
-   auto itr = child_list.begin();
+//パス更新									//パスツリーに詰め直す関数
+void PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> &child_list,std::list<Block> &stash_list){
+   auto itr = child_list.begin();						//leaflabelのノードにアクセスするためにイテレータの移動
    for(int s=1;s<leaflabel;s++){
 	++itr;
    }
-   int tmpblocknum=numberblock-1;
-   SNode* tmpnode = itr->myAddr;        //*tmpnodeに現在のリーフノードのアドレスを渡している
-   while(tmpnode != NULL){	//現在のノードがルートから葉の間である間繰り返し
-	//現在のノードのブロックに格納できるラベルを調べる
-   	int leftside = Leftchecker(tmpnode);
-    	int rightside = Rightchecker(tmpnode);
-
+   int tmpblocknum=numberblock-1;						//書くノードのブロック番号
+   SNode* tmpnode = itr->myAddr;        					//*tmpnodeに現在のリーフノードのアドレスを渡している
+   while(tmpnode != NULL){							//各ノードにデータブロックを詰め込んでいる
+   	int leftside = Leftchecker(tmpnode);					//現在のノードのブロックに格納できるラベルを調べる
+    	int rightside = Rightchecker(tmpnode);					//現在のノードのブロックに格納できるラベルを調べる
 	std::cout<<"leftside"<<leftside<<std::endl;
 	std::cout<<"rightside"<<rightside<<std::endl;
 
     	////スタッシュの先頭からあるラベルのブロックを抽出して詰める
-    	std::list<Block> possibleblock_list;	//抽出されたブロックを格納するリスト
+    	std::list<Block> possibleblock_list;					//抽出されたブロックを格納するリスト
 	std::cout<<"スタッシュサイズ"<<stash_list.size()<<std::endl;
    	for(auto itr1 = stash_list.begin();itr1 != stash_list.end();++itr1){      
 		std::cout<<"stashにあるやつ"<<itr1->addr<<std::endl;
-		if(leftside<=itr1->label && itr1->label<=rightside && tmpnode->block[tmpblocknum].addr=="0"){	//stash_listから取り出したブロックのラベルがleftside以上rightside以下であるか否か
+		if(leftside<=itr1->label && itr1->label<=rightside && tmpnode->block[tmpblocknum].addr=="0"){				//stash_listから取り出したブロックのラベルがleftside以上rightside以下であるか否か
 			std::cout<<"doko"<<&itr1->addr<<std::endl;
-			tmpnode->block[tmpblocknum].addr = itr1->addr;	//現在のブロックにスタッシュから格納
+			tmpnode->block[tmpblocknum].addr = itr1->addr;		//現在のブロックにスタッシュから格納
 			tmpnode->block[tmpblocknum].label = itr1->label;	//現在のブロックにスタッシュから格納
-			itr1=stash_list.erase(itr1);		//スタッシュから削除して,itr1は次の要素を指す
+			itr1=stash_list.erase(itr1);				//スタッシュから削除して,itr1は次の要素を指す
+			--itr1;							//itr1が正しく動くように
 			
-			std::cout<<"uoui"<<&tmpnode->block[tmpblocknum]<<std::endl;
-			--itr1;				//itr1が正しく動くように
-			
-			if(tmpblocknum==0){//現在のノードのブロックに書き込みきったら上のノード
-				std::cout<<"でたよ"<<std::endl;
+			if(tmpblocknum==0){					//現在のブロックの番号が0ならfor文から抜ける
+				std::cout<<"このノードにはもう格納できません"<<std::endl;
 				break;
-				
 			}
 			else{
 			tmpblocknum--;
@@ -234,165 +223,103 @@ void PathUpdate(int leaflabel,int numberblock,int method,int GB,std::list<SNode>
   	if(tmpnode == NULL){
 		break;
    	}
-	std::cout<<"いやーーーー"<<std::endl;
-	tmpnode = tmpnode->pRoot;	//現在のノードのブロックなんばが０ならひとつ上のノードに上がる
+	std::cout<<"上に参りまーす"<<std::endl;
+	tmpnode = tmpnode->pRoot;						//現在のノードの親ノードに移る
+   	tmpblocknum =numberblock-1;						//上のノードに上がるのでブロックナンバーを初期化
+        std::cout<<tmpblocknum<<std::endl;
   	if(tmpnode == NULL){
 		break;
    	}
-   	tmpblocknum =numberblock-1;//上のノードに上がるのでブロックナンバーを初期化
-        std::cout<<tmpblocknum<<std::endl;
    }
-//***********************************************************//
-//空ダミーを作成するフェーズ
-   //PathPRAM(method=0)
-   if(method==0){
+//***********************空ダミーを作成するフェーズ************////////
 	//空ブロックの検索
-   	//leaflabelのノードにアクセスするためにイテレータの移動
-   	auto itr3 = child_list.begin();
+   	auto itr3 = child_list.begin();						//leaflabelのノードにアクセスするためにイテレータの移動
    	for(int rt=1;rt<leaflabel;rt++){
 		++itr3;
    	}
-   	int tmpblocknumE=numberblock-1;
-   	SNode* tmpnodeE = itr3->myAddr;        //*tmpnodeに現在のリーフノードのアドレスを渡している
+   	SNode* tmpnodeE = itr3->myAddr;        					//*tmpnodeに現在のリーフノードのアドレスを渡している
 	while(tmpnodeE != NULL){
-		for(int as=numberblock-1;0<=as;as--){//現在のブロックが空で
-			if(tmpnodeE->block[as].addr == "0" ){				//このブロックは空であるか否か
-				//空ブロックにランダムダミー代入
-				if(GB==4){	//4GB
-					std::string random;	//ランダム変数
+		for(int as=numberblock-1;0<=as;as--){				//現在のブロックが空で
+			if(tmpnodeE->block[as].addr == "0" ){			//このブロックは空であるか否か(アドレスが0であるかいなかで空かどうか判断している)
+				if(GB==4){					//4GB
+					std::string random;			//ランダム変数
 				 	tmpnodeE->block[as].addr= "0x";
 					std::random_device rnd;
 					std::mt19937 mt(rnd());
 					std::uniform_int_distribution<> randLabel(0,15);
-					for(int yu=0;yu<8;yu++){
+					for(int addr_size=0;addr_size<8;addr_size++){		//アドレス空間の大きさによってyuは変化する
 						//変数randomの乱数生成
-						int sa = randLabel(mt);
-						if(sa==0){
+						int num_random = randLabel(mt);
+						if(num_random==0){
 							random = "0";
 						}
-                                                else if(sa==1){
+                                                else if(num_random==1){
 							random = "1";
 						}
-                                                else if(sa==2){
+                                                else if(num_random==2){
 							random = "2";
 						}
-                                                else if(sa==3){
+                                                else if(num_random==3){
 							random = "3";
 						}
-                                                else if(sa==4){
+                                                else if(num_random==4){
 							random = "4";
 						}
-                                                else if(sa==5){
+                                                else if(num_random==5){
 							random = "5";
 						}
-                                                else if(sa==6){
+                                                else if(num_random==6){
 							random = "6";
 						}
-                                                else if(sa==7){
+                                                else if(num_random==7){
 							random = "7";
 						}
-                                                else if(sa==8){
+                                                else if(num_random==8){
 							random = "8";
 						}
-                                                else if(sa==9){
+                                                else if(num_random==9){
 							random = "9";
 						}
-                                                else if(sa==10){
+                                                else if(num_random==10){
 							random = "A";
 						}
-                                                else if(sa==11){
+                                                else if(num_random==11){
 							random = "B";
 						}
-                                                else if(sa==12){
+                                                else if(num_random==12){
 							random = "C";
 						}
-                                                else if(sa==13){
+                                                else if(num_random==13){
 							random = "D";
 						}
-                                                else if(sa==14){
+                                                else if(num_random==14){
 							random = "E";
 						}
-                                                else if(sa==15){
+                                                else if(num_random==15){
 							random = "F";
 						}
 						tmpnodeE->block[as].addr=tmpnodeE->block[as].addr+random;
 					}
-				}
-				else if(GB==2){	//2GB
-
-				}
-				else{}
-			}
-			
-		
-		}
-		tmpnodeE =tmpnodeE->pRoot;	//現在のノードを親にする
-	}
-   }
-   //提案手法(method=1)
-   else{
-   	//空ダミーの内提案ダミー作成上限以外をランダム生成
- 	//準備：まず１番上に行く
-		//現在の葉ノードにアクセス
-   		auto itr4 = child_list.begin();
-   		for(int rt=1;rt<leaflabel;rt++){
-			++itr4;
-   		}
-   		int tmpblocknumC=numberblock-1;
-   		SNode* tmpnodeC = itr4->myAddr;        //*tmpnodeに現在のリーフノードのアドレスを渡している
-		std::string path;	//経路の記憶　根ノードがまえ
-		while(tmpnodeC != NULL){
-			if(tmpnodeC->hand=="left"){	//leftなら
-				path = "0"+path;
-			}
-			else{
-				path = path+"1"+path;	//rightなら
-			}
-			if(tmpnodeC->pRoot != NULL){	//tmpnodeCがwhile文を出る際に根ノードであるようにするため
-				break;
-			}
-			tmpnodeC = tmpnodeC->pRoot;	//親になる
-		}
-	//tmpnodeCにはいま現在のノードが入れられている
-	//現ノードに空があるか確認
-		//現在のノードのブロックに空があるか調
-		for(int T=0;T<numberblock;T++){
-			//現ノードのブロックが空か調べる
-			if(tmpnodeC->block[T].addr == "0"){
-				//空であれば、ブロックを複製しようと試みる
-			}
-		}
-		//
-
- 	//空提案ダミー複製
- 	//そのノードのからブロックが０になれば--finish;
- 	//そのノードの空ブロック全部に対してのアクションが終われば、次のノードに行く
- 	//リーフラベルがｘのとき、１−ラベル/2ならchild[0],ラベル/2+1-ラベルならchild[1]   	
+				}						//if(GB==4)
+			else if(GB==2){						//2GB
+			}							
+		else{}
+		}								 
+	}									
+	tmpnodeE =tmpnodeE->pRoot;						//現在のノードを親にする
    }
 }
-
 
 //ツリーの作成
 void Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
    auto itr =child_list.begin(); 
-   for(int level=0;level<depth;level++){	//２分木の深さ
-  	int numparent = child_list.size();       //世代の親の数
+   for(int level=0;level<depth;level++){					//２分木の深さ
+  	int numparent = child_list.size();       				//世代の親の数
 	std::cout<<"世代"<<numparent<<std::endl;
-     	for(int o=0;o<numparent;o++){              //現レベルごとの子供を産む
-            
-             	//std::cout<<child_list.front().addr<<std::endl;
-		//std::cout<<"子供を産む前の親のアドレス(from親）"<<&child_list.front()<<std::endl;
-		//std::cout<<"子供を産む前の親のアドレス(from親）"<<&child_list.back()<<std::endl;
+     	for(int o=0;o<numparent;o++){             				 //現レベルごとの子供を産む
 		AllocateChild(child_list.front().myAddr,child_list,numberblock);
 		std::cout<<child_list.size()<<std::endl;
-		//std::cout<<"子から見た親のアドレス（from子）"<<child_list.front().pRoot<<std::endl;
-		//std::cout<<"子から見た親のアドレス（from子）"<<child_list.back().pRoot<<std::endl;
-		//std::cout<<"子から見た子のアドレス（from子）"<<&child_list.front()<<std::endl;
-		//std::cout<<"子から見た子のアドレス（from子）"<<&child_list.back()<<std::endl;
-   			
-             
         }
-    	
    }
 
    //葉ノードにそれぞれラベルを書き込んでいる
@@ -409,14 +336,12 @@ void Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
 int main() {
    // Initialize tree
    int num = 0;
-   int numberblock = 2;//root.blockのnewする数に対応
+   int numberblock = 2;								//root.blockのnewする数に対応
    int depth=4;
    SNode root;
    SNode *tmpNode;
    root.block= new Block[2];
    
-   
-   //std::cout<<root<<std::endl;
    std::list<SNode> child_list;
    std::list<Block> stash_list;
 
@@ -425,47 +350,27 @@ int main() {
    root.block[0].addr="12";
    root.block[0].label = 3;
    root.block[0].blockAddr=&root.block[0];
-   //root.block[0].NodeAddr=&root;
    root.block[1].blockAddr=&root.block[1];
-   //root.block[1].NodeAddr=&root;
    root.pRoot = nullptr;
    root.myAddr = &root;
    child_list.push_back(root);
-   //std::for_each(child_list.cbegin(),child_list.cend(),[](SNode node){
-   //std::cout<<"なんだい"<<node.addr<<std::endl;
-   //});
 /////*******二分木のもとを作成******///////
  
    Pathmake(depth,child_list,numberblock);
-////********************************//////////
-   //ラベルからそのラベルの葉ノードを見つける
    //２分木テスト（６番目の葉っぱに書き込みと読み込み）
-   //std::cout<<"「"<<child_list.back().myAddr->block[1].label<<std::endl; 
    PathWrite("dada",1,child_list,numberblock);
    PathWrite("dame",1,child_list,numberblock); 
    PathWrite("daga",1,child_list,numberblock); 
-   //std::cout<<"葉ノードのルート"<<child_list.front()->myAddr->block[1].addr<<std::end;
-   //std::cout<<"ノードがpop_frontされても事実上消えていないことの確認"<<root.label<<std::endl;
-    //std::cout<<"    "<<child_list.front().myAddr->block[0].addr<<std::endl;
    
    TraceToRoot(2,stash_list,child_list,2,"daga",4); 
-   //TraceToRoot(1,stash_list,child_list,2,"dada",6); 
    auto itr1 = stash_list.begin();
-   //std::cout<<"address"<<stash_list.size()<<"S"<<std::endl;
    for(int v=0;v<0;v++){
 	itr1++;
    }
-   // std::cout<<"address"<<itr1->addr<<"S"<<std::endl;
-   //std::cout<<"adrress"<<stash_list.front().label<<std::endl;
-  
-
    int dpp=3;
    dpp = Leftchecker(child_list.back().myAddr);
-   //std::cout<<"left:"<<dpp<<std::endl;
-   //std::cout<<child_list.back().myAddr->block[1].label;
-   PathUpdate(2,2,0,4,child_list,stash_list);
+   PathUpdate(2,2,4,child_list,stash_list);
    auto itr2 = child_list.begin();
-   //itr2++;
    std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->pRoot->pRoot->block[0].addr<<std::endl;
    std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->block[1].addr<<std::endl;
    std::cout<<"dagaきてくれ"<<itr2->myAddr->pRoot->pRoot->pRoot->block[0].addr<<std::endl;
