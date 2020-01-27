@@ -133,6 +133,16 @@ void PathTree::Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
 //初パス書き込み
 void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){
 
+   std::ofstream ofs(Fname, std::ios::app);					//ファイルオープン
+   if(!ofs)
+   {
+        std::cout << "ファイルが開けませんでした。" << std::endl;
+        //std::cin.get();
+        return ;
+   }	
+   ofs << address <<" READ"<<std::endl;						//トレースファイルに出力
+   ofs.close();   
+   std::cout<<"たのむよいｙいおｙ"<<std::endl;
    auto itr = child_list.begin();                                               //leaflabelのノードにアクセスするためにイテレータの移動
    for(int s=1;s<leaflabel;s++){
         ++itr;
@@ -212,7 +222,8 @@ void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<
   for(int v=0;v<stashin-1;v++){                                                 //スタッシュに格納した分イテレータを移動している
         itr1++;
   }
-  ofs.close();                                                                  //ファイルクローズ
+  ofs.close();   
+  std::cout<<"スタッシュに読み込んだ数は　"<<stash_list.size()<<std::endl;                                                               //ファイルクローズ
 }
 
 //パス書き込みで各ノードに格納可能な左側リーフラベルを調べる関数
