@@ -4,18 +4,35 @@
 #include<vector>
 #include<map>
 #include<random>
-
+#include<list>
+#include<algorithm>
 
 //宣言
-double PathL;//二分木の高さの数
-double PathZ;//バケツ内のブロック数
-double PathN;//パス内のブロック数
-double Label;//ラベルの数
-std::string trace;//トレース1行分
-std::map<std::string, int >mp;//文字列→整数の連想配列
+double PathL;										//二分木の高さの数
+double PathZ;										//バケツ内のブロック数
+double PathN;										//パス内のブロック数
+double Label;										//ラベルの数
+std::string trace;									//トレース1行分
+std::map<std::string, int >mp;								//文字列→整数の連想配列
+struct Block										//データブロック宣言
+	{
+		std::string addr;							//アドレス
+		int label;								//リーフラベル
+		Block *blockAddr;							//ブロックの自アドレス		
+	};
+struct SNode										//ノードの宣言
+	{	
+		std::string hand;							//left or right
+		SNode *pChild[2];							//子バケツのアドレス
+		SNode *pRoot;								//親バケツのアドレス
+		SNode *myAddr;								//バケツの自アドレス（child_listに入れる前のアドレス）
+		Block *block;								//バケツ内のブロックのアドレス
+	};
+std::list<Block> stash_list;
+std::list<SNode> child_list;
+SNode root;
 
-class Perse{
-
+class Perse{										//Perceクラス
 public:
 //変数	
 	std::ifstream ifs;
@@ -24,22 +41,37 @@ public:
 	char del;
 	std::vector<std::string> subStr;
 //関数
-	void fileopen(std::string filename);//入力トレースを読み込む関数
+	void fileopen(std::string filename);						//入力トレースを読み込む関数
 
-	void cut(std::string);//入力からアドレス、命令タイプ、時刻を切り出す関数
+	void cut(std::string);								//入力からアドレス、命令タイプ、時刻を切り出す関数
 };
 
-class PosMap{
-
+class PosMap{										//PosMapクラス
 public:
 //変数
 	int OldLabel,Label,NewLabel;
-	std::map<std::string, int >mp;     //文字列→整数の連想配列
+	std::map<std::string, int >mp;     						//文字列→整数の連想配列
 	
 //関数
-	int checkleaf(std::string address);//メモリアドレスのリーフラベルを取得する関数
-	void updatelabel(std::string address);//アドレスのラベルを更新する関数
+	int checkleaf(std::string address);						//メモリアドレスのリーフラベルを取得する関数
+	void updatelabel(std::string address);						//アドレスのラベルを更新する関数
 };
 
+class PathTree{										//PathTreeクラス
+public:
+//変数
 
+	int depth;									//Pathmake 
+	int numberblock;								//Pathmake InitNode AllocateChild
+	SNode updateNode;								//InitNode 
+	SNode tmpNode;									//InitNode Allocatechild
+
+//関数
+	void Pathmake(int depth,std::list<SNode> &child_list,int numberblock);		//ツリーを作成する関数
+	void InitNodeL(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
+	void InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
+	void AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int numberblock);//２つの子を生成する関数
+
+
+};
 
