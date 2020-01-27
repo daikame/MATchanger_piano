@@ -1,4 +1,5 @@
 #include"main.h"
+#define Fname "/home/dai/git/MATchanger_piano/MATchanger/ver1/output_trace"
 
 
 void Perse::fileopen(std::string filename){					//ファイルを読み込む関数	
@@ -129,6 +130,90 @@ void PathTree::Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
    }
 }
 
+//初パス書き込み
+void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){
+
+   auto itr = child_list.begin();                                               //leaflabelのノードにアクセスするためにイテレータの移動
+   for(int s=1;s<leaflabel;s++){
+        ++itr;
+   }
+   //リーフノードから各パスの空いている部分にデータを格納
+   SNode* tmpnode = itr->myAddr;                                                //*tmpnodeに現在のリーフノードのアドレスを渡している
+
+   int p=0;                                                                     //ブロック番号
+   int s=0;                                                                     //
+   while(tmpnode != NULL){
+        for(p = numberblock-1;0<=p;p--){
+                //std::cout<<"as"<<std::endl;
+                if(tmpnode->block[p].addr=="0"){
+                        tmpnode->block[p].addr = address;
+                        tmpnode->block[p].label = leaflabel;
+                        s=p;
+                        std::cout<<s<<std::endl;
+                        std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
+                        break;                                                  //ちっちゃいfor文抜ける
+                }
+        }
+        if(tmpnode->block[s].addr==address){
+                break;
+        }
+        std::cout<<"ひとつ上のノードで書き込めるか探します"<<std::endl;
+        tmpnode = tmpnode->pRoot;                                               //ひとつ上のノードに移動
+   }
+}
+
+//パス読み込み関数 
+void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel){     //本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
+
+   std::ofstream ofs(Fname, std::ios::app);                                     //ファイルオープン 
+   if(!ofs)
+   {
+        std::cout << "ファイルが開けませんでした。" << std::endl;
+        //std::cin.get();
+        return ;
+   }
+   //読み込みたいパスのリーフラベルのノードにアクセスするためにイテレータを移動
+   auto itr = child_list.begin();
+   for(int s=1;s<leaflabel;s++){
+        ++itr;
+   }
+   SNode* tmpnode = itr->myAddr;                                                //*tmpnodeに読み込みたいリーフノードのアドレスを渡している
+   //スタッシュに繰り返しデータを入れるwhile文
+   Block  tmpblock;                                                             //ブロックの宣言
+   int cleancounter=0;
+   int stashin=0;                                                               //スタッシュに格納した回数
+   while(tmpnode != NULL){                                                      //スタッシュに繰り返し
+        for(int p = numberblock-1;0<=p;p--){
+                tmpblock.addr = tmpnode->block[p].addr;                         //tmpblockに今操作しているブロックのアドレス情報を渡す
+                tmpblock.label = tmpnode->block[p].label;                       //tmpblockに今操作しているブロックのラベル情報を渡す
+
+                if(tmpblock.addr==address){                                     //要求されたリクエストのアドレスをスタッシュに読み込む前に、ラベルを更新する
+                        tmpblock.label=NewLabel;
+                }
+
+                //アクセス中のパスを空っぽにするための操作
+                tmpnode->block[p].addr="0";                                     //パス内のブロックのアドレスとラベルを０にしてブロックを空にする
+                if(cleancounter!=0){                                                    //葉ノード以外のノードのブロックのラベルは0にする
+                        tmpnode->block[p].label=0;
+                }
+
+                if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
+                ofs <<tmpblock.addr<<" READ"<<std::endl;                        //トレースファイルの出力
+                stash_list.push_back(tmpblock);                                 //スタッシュにデータブロックを格納していく
+                stashin++;
+                }
+        }
+        tmpnode = tmpnode->pRoot;                                               //親ノードに移動
+        cleancounter++;
+   }
+
+  auto itr1 = stash_list.begin();                                               //itr1をスタッシュの先頭に設置(確認用?)
+  for(int v=0;v<stashin-1;v++){                                                 //スタッシュに格納した分イテレータを移動している
+        itr1++;
+  }
+  ofs.close();                                                                  //ファイルクローズ
+}
+
 
 
 int main(){
@@ -147,7 +232,8 @@ int main(){
  	PathTree pathtree;
 
 	//2分木を作成する関数//
-	root.block = new Block[2];
+	int num_blocks = PathZ;
+	root.block = new Block[num_blocks];
 	root.block[1].addr="10";						//根ノード関係
  	root.block[1].label = 5;						//↓
    	root.block[0].addr="12";						//↓
@@ -157,7 +243,7 @@ int main(){
    	root.pRoot = nullptr;							//↓
    	root.myAddr = &root;							//↓
    	child_list.push_back(root);
-	pathtree.Pathmake(PathL,child_list,2);
+	pathtree.Pathmake(PathL,child_list,PathZ);
 
 	//入力トレースを読み込む関数//
 	std::ifstream ifs("mase.txt");						// ファイルの読み込み
@@ -169,24 +255,33 @@ int main(){
 /////////////////////////////////ループ開始部//////////////////////////////////////////////////////
 	while(std::getline(ifs,trace))						//1行ずつ読み込み
 	{
+		std::cout<<"----[命令]----"<<std::endl;
 		std::cout << "[" << trace << "]" << std::endl;			//1行ずつ標準出力
-
-	//入力からアドレス、命令タイプ、時刻を切り出す関数//	
-		perse.cut(trace);
+		perse.cut(trace);						//入力からアドレス、命令タイプ、時刻を切り出す関数
 
 	//*perse.a[0] アドレス ,perse.a[1] 命令タイプ ,perse.a[2] サイクル数
-	//メモリアドレスのリーフラベルを取得する関数//
 	//std::map<std::string, int >mp;//文字列→整数の連想配列
 		std::cout<<"["<<mp[perse.a[0]]<<"]"<<std::endl;
 		positionmap.OldLabel= mp[perse.a[0]];				//メモリアドレスのリーフラベルを取得する関数
 		std::cout<<"OldLabelは"<<positionmap.OldLabel<<std::endl;
 
-	//アドレスのラベルを更新する関数//
 		std::random_device rnd;
 		std::mt19937 mt(rnd());
 		std::uniform_int_distribution<> randLabel(1,Label);
-		mp[perse.a[0]]=randLabel(mt); 					//アドレスにランダムにラベル登録
+		mp[perse.a[0]]=randLabel(mt); 					//アドレスのラベルを更新する関数
 		std::cout <<mp[perse.a[0]]<<"\n";
+		positionmap.NewLabel = mp[perse.a[0]];
+	//ポジションマップにアドレスが登録されているか確認
+	if(positionmap.OldLabel==0){						//ポジションマップにリーフラベルが登録されていない場合
+		std::cout<<"登録されていない"<<std::endl;
+		//(アクセスされたアドレスのみを書き込む関数)
+		pathtree.PathWrite(perse.a[0],positionmap.NewLabel,child_list,PathZ);						//パス内の1ノードのみを更新する関数
+	}
+	else{									//ポジションマップにリーフラベルが登録されている場合
+		std::cout<<"登録済み"<<std::endl;
+	}
+
+
 	}
 	return 0;
 

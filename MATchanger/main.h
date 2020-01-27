@@ -62,16 +62,19 @@ public:
 //変数
 
 	int depth;									//Pathmake 
-	int numberblock;								//Pathmake InitNode AllocateChild
+	int numberblock;								//Pathmake InitNode AllocateChild TraceToRoot
 	SNode updateNode;								//InitNode 
 	SNode tmpNode;									//InitNode Allocatechild
+	std::string address;								//PathWrite TraceToRoot
+	int leaflabel;									//PathWrite TraceToRoot
 
 //関数
 	void Pathmake(int depth,std::list<SNode> &child_list,int numberblock);		//ツリーを作成する関数
 	void InitNodeL(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
 	void InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
 	void AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int numberblock);//２つの子を生成する関数
-
+	void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock);							//初パス書き込み関数
+	void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel);	//パス読み込み関数
 
 };
 
