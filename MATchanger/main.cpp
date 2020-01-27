@@ -163,7 +163,7 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
 }
 
 //パス読み込み関数 
-void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel){     //本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
+void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel){     //本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
 
    std::ofstream ofs(Fname, std::ios::app);                                     //ファイルオープン 
    if(!ofs)
@@ -199,6 +199,7 @@ void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &ch
 
                 if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
                 ofs <<tmpblock.addr<<" READ"<<std::endl;                        //トレースファイルの出力
+		std::cout<<"トレースファイルに書き込みました。"<<std::endl;
                 stash_list.push_back(tmpblock);                                 //スタッシュにデータブロックを格納していく
                 stashin++;
                 }
@@ -212,6 +213,155 @@ void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &ch
         itr1++;
   }
   ofs.close();                                                                  //ファイルクローズ
+}
+
+//パス書き込みで各ノードに格納可能な左側リーフラベルを調べる関数
+int PathTree::Leftchecker(SNode* checkNode){
+   SNode *tmp_node1 = checkNode;
+   int mostleftlabel;                                                           //最も左にあるラベルを見つけるための宣言
+   mostleftlabel = tmp_node1->block[0].label;
+   while(tmp_node1->pChild[0] != NULL){
+      tmp_node1 = tmp_node1->pChild[0];
+      mostleftlabel=tmp_node1->block[0].label;                                  //ここでブロックは0でも1でもよい  ０のほうが無難
+   }
+        return mostleftlabel;
+}
+
+//パス書き込みで各ノードに格納可能な右側リーフラベルを調べる関数
+int PathTree::Rightchecker(SNode* checkNode){
+   SNode *tmp_node2 = checkNode;
+   int mostrightlabel;                                                          //最も右にあるラベルを見つけるための宣言
+   mostrightlabel = tmp_node2->block[0].label;
+   while(tmp_node2->pChild[1] != NULL){
+      tmp_node2 = tmp_node2->pChild[1];
+      mostrightlabel=tmp_node2->block[0].label;                                 //ここでブロックは0でも1でもよい
+   }
+        return mostrightlabel;
+}
+
+//パス更新                                                                      //パスツリーに詰め直す関数
+void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> &child_list,std::list<Block> &stash_list){
+   auto itr = child_list.begin();                                               //leaflabelのノードにアクセスするためにイテレータの移動
+   for(int s=1;s<leaflabel;s++){
+        ++itr;
+   }
+   int tmpblocknum=numberblock-1;                                               //書くノードのブロック番号
+   SNode* tmpnode = itr->myAddr;                                                //*tmpnodeに現在のリーフノードのアドレスを渡している
+   while(tmpnode != NULL){                                                      //各ノードにデータブロックを詰め込んでいる
+        int leftside = Leftchecker(tmpnode);                                    //現在のノードのブロックに格納できるラベルを調べる
+        int rightside = Rightchecker(tmpnode);                                  //現在のノードのブロックに格納できるラベルを調べる
+        std::cout<<"leftside"<<leftside<<std::endl;
+        std::cout<<"rightside"<<rightside<<std::endl;
+
+        ////スタッシュの先頭からあるラベルのブロックを抽出して詰める
+        std::list<Block> possibleblock_list;                                    //抽出されたブロックを格納するリスト
+        std::cout<<"スタッシュサイズ"<<stash_list.size()<<std::endl;
+        for(auto itr1 = stash_list.begin();itr1 != stash_list.end();++itr1){
+                std::cout<<"stashにあるやつ"<<itr1->addr<<std::endl;
+                if(leftside<=itr1->label && itr1->label<=rightside && tmpnode->block[tmpblocknum].addr=="0"){                           //stash_listから取り出したブロックのラベルがleftside以上rightside以下であるか否か
+                        std::cout<<"doko"<<&itr1->addr<<std::endl;
+                        tmpnode->block[tmpblocknum].addr = itr1->addr;          //現在のブロックにスタッシュから格納
+                        tmpnode->block[tmpblocknum].label = itr1->label;        //現在のブロックにスタッシュから格納
+                        itr1=stash_list.erase(itr1);                            //スタッシュから削除して,itr1は次の要素を指す
+                        --itr1;                                                 //itr1が正しく動くように
+
+                        if(tmpblocknum==0){                                     //現在のブロックの番号が0ならfor文から抜ける
+                                std::cout<<"このノードにはもう格納できません"<<std::endl;
+                                break;
+                        }
+                        else{
+                        tmpblocknum--;
+                        }
+                }
+        }
+        if(tmpnode == NULL){
+                break;
+        }
+        std::cout<<"上に参りまーす"<<std::endl;
+        tmpnode = tmpnode->pRoot;                                               //現在のノードの親ノードに移る
+        tmpblocknum =numberblock-1;                                             //上のノードに上がるのでブロックナンバーを初期化
+        std::cout<<tmpblocknum<<std::endl;
+        if(tmpnode == NULL){
+                break;
+        }
+   }
+//***********************空ダミーを作成するフェーズ************////////
+        //空ブロックの検索
+        auto itr3 = child_list.begin();                                         //leaflabelのノードにアクセスするためにイテレータの移動
+        for(int rt=1;rt<leaflabel;rt++){
+                ++itr3;
+        }
+        SNode* tmpnodeE = itr3->myAddr;                                         //*tmpnodeに現在のリーフノードのアドレスを渡している
+        while(tmpnodeE != NULL){
+                for(int as=numberblock-1;0<=as;as--){                           //現在のブロックが空で
+                        if(tmpnodeE->block[as].addr == "0" ){                   //このブロックは空であるか否か(アドレスが0であるかいなかで空かどうか判断している)
+                                if(GB==4){                                      //4GB
+                                        std::string random;                     //ランダム変数
+                                        tmpnodeE->block[as].addr= "0x";
+                                        std::random_device rnd;
+                                        std::mt19937 mt(rnd());
+                                        std::uniform_int_distribution<> randLabel(0,15);
+                                        for(int addr_size=0;addr_size<8;addr_size++){           //アドレス空間の大きさによってyuは変化する
+                                                //変数randomの乱数生成
+                                                int num_random = randLabel(mt);
+                                                if(num_random==0){
+                                                        random = "0";
+                                                }
+                                                else if(num_random==1){
+                                                        random = "1";
+                                                }
+                                                else if(num_random==2){
+                                                        random = "2";
+                                                }
+                                                else if(num_random==3){
+                                                        random = "3";
+                                                }
+                                                else if(num_random==4){
+                                                        random = "4";
+                                                }
+                                                else if(num_random==5){
+                                                        random = "5";
+                                                }
+                                                else if(num_random==6){
+                                                        random = "6";
+                                                }
+                                                else if(num_random==7){
+                                                        random = "7";
+                                                }
+                                                else if(num_random==8){
+                                                        random = "8";
+                                                }
+                                                else if(num_random==9){
+                                                        random = "9";
+                                                }
+                                                else if(num_random==10){
+                                                        random = "A";
+                                                }
+                                                else if(num_random==11){
+                                                        random = "B";
+                                                }
+                                                else if(num_random==12){
+                                                        random = "C";
+                                                }
+                                                else if(num_random==13){
+                                                        random = "D";
+                                                }
+                                                else if(num_random==14){
+                                                        random = "E";
+                                                }
+                                                else if(num_random==15){
+                                                        random = "F";
+                                                }
+					       tmpnodeE->block[as].addr=tmpnodeE->block[as].addr+random;
+                                        }
+                                }                                               //if(GB==4)
+                        else if(GB==2){                                         //2GB
+                        }
+                else{}
+                }
+        }
+        tmpnodeE =tmpnodeE->pRoot;                                              //現在のノードを親にする
+   }
 }
 
 
@@ -275,10 +425,13 @@ int main(){
 	if(positionmap.OldLabel==0){						//ポジションマップにリーフラベルが登録されていない場合
 		std::cout<<"登録されていない"<<std::endl;
 		//(アクセスされたアドレスのみを書き込む関数)
-		pathtree.PathWrite(perse.a[0],positionmap.NewLabel,child_list,PathZ);						//パス内の1ノードのみを更新する関数
+		pathtree.PathWrite(perse.a[0],positionmap.NewLabel,child_list,PathZ);										//パス内の1ノードのみを更新する関数
 	}
 	else{									//ポジションマップにリーフラベルが登録されている場合
 		std::cout<<"登録済み"<<std::endl;
+		pathtree.TraceToRoot(positionmap.OldLabel,stash_list,child_list,PathZ,perse.a[0],positionmap.NewLabel);						//パス読み込み関数
+		pathtree.PathUpdate(positionmap.OldLabel,PathZ,2,child_list,stash_list);									//パスを更新する関数
+
 	}
 
 
