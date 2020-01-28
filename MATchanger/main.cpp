@@ -84,7 +84,7 @@ void PathTree::AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int num
    tmpNode->pChild[0]->block = new Block[numberblock];
    tmpNode->pChild[1]->block = new Block[numberblock];
 
-   std::cout<<"list挿入前"<<tmpNode->pChild[0]<<std::endl;
+   //std::cout<<"list挿入前"<<tmpNode->pChild[0]<<std::endl;
 
    SNode node1,node2,node3;
 
@@ -96,8 +96,8 @@ void PathTree::AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int num
    child_list.push_back(*tmpNode->pChild[0]);                                   //子供リストの後ろに子供追加
    child_list.push_back(*tmpNode->pChild[1]);                                   //子供リストの後ろに子供追加
    child_list.pop_front();                                                      //先頭の親を削除
-   std::cout<<"list挿入後"<<&child_list.front()<<std::endl;
-   std::cout<<"in Allocate "<<child_list.front().pRoot<<std::endl;
+   //std::cout<<"list挿入後"<<&child_list.front()<<std::endl;
+   //std::cout<<"in Allocate "<<child_list.front().pRoot<<std::endl;
 }
 
 
@@ -115,7 +115,7 @@ void PathTree::Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
         std::cout<<"世代"<<numparent<<std::endl;
         for(int o=0;o<numparent;o++){                                            //現レベルごとの子供を産む
                 AllocateChild(child_list.front().myAddr,child_list,numberblock);
-                std::cout<<child_list.size()<<std::endl;
+                //std::cout<<child_list.size()<<std::endl;
         }
    }
 
@@ -132,7 +132,6 @@ void PathTree::Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
 
 //初パス書き込み
 void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){
-
    std::ofstream ofs(Fname, std::ios::app);					//ファイルオープン
    if(!ofs)
    {
@@ -142,7 +141,7 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
    }	
    ofs << address <<" READ"<<std::endl;						//トレースファイルに出力
    ofs.close();   
-   std::cout<<"たのむよいｙいおｙ"<<std::endl;
+   //std::cout<<"たのむよいｙいおｙ"<<std::endl;
    auto itr = child_list.begin();                                               //leaflabelのノードにアクセスするためにイテレータの移動
    for(int s=1;s<leaflabel;s++){
         ++itr;
@@ -160,7 +159,7 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
                         tmpnode->block[p].label = leaflabel;
                         s=p;
                         std::cout<<s<<std::endl;
-                        std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
+                        //std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
                         break;                                                  //ちっちゃいfor文抜ける
                 }
         }
@@ -209,7 +208,7 @@ void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<
 
                 if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
                 ofs <<tmpblock.addr<<" READ"<<std::endl;                        //トレースファイルの出力
-		std::cout<<"トレースファイルに書き込みました。"<<std::endl;
+		//std::cout<<"トレースファイルに書き込みました。"<<std::endl;
                 stash_list.push_back(tmpblock);                                 //スタッシュにデータブロックを格納していく
                 stashin++;
                 }
@@ -261,16 +260,16 @@ void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> 
    while(tmpnode != NULL){                                                      //各ノードにデータブロックを詰め込んでいる
         int leftside = Leftchecker(tmpnode);                                    //現在のノードのブロックに格納できるラベルを調べる
         int rightside = Rightchecker(tmpnode);                                  //現在のノードのブロックに格納できるラベルを調べる
-        std::cout<<"leftside"<<leftside<<std::endl;
-        std::cout<<"rightside"<<rightside<<std::endl;
+        //std::cout<<"leftside"<<leftside<<std::endl;
+        //std::cout<<"rightside"<<rightside<<std::endl;
 
         ////スタッシュの先頭からあるラベルのブロックを抽出して詰める
         std::list<Block> possibleblock_list;                                    //抽出されたブロックを格納するリスト
         std::cout<<"スタッシュサイズ"<<stash_list.size()<<std::endl;
         for(auto itr1 = stash_list.begin();itr1 != stash_list.end();++itr1){
-                std::cout<<"stashにあるやつ"<<itr1->addr<<std::endl;
+                //std::cout<<"stashにあるやつ"<<itr1->addr<<std::endl;
                 if(leftside<=itr1->label && itr1->label<=rightside && tmpnode->block[tmpblocknum].addr=="0"){                           //stash_listから取り出したブロックのラベルがleftside以上rightside以下であるか否か
-                        std::cout<<"doko"<<&itr1->addr<<std::endl;
+                        //std::cout<<"doko"<<&itr1->addr<<std::endl;
                         tmpnode->block[tmpblocknum].addr = itr1->addr;          //現在のブロックにスタッシュから格納
                         tmpnode->block[tmpblocknum].label = itr1->label;        //現在のブロックにスタッシュから格納
                         itr1=stash_list.erase(itr1);                            //スタッシュから削除して,itr1は次の要素を指す
@@ -288,10 +287,10 @@ void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> 
         if(tmpnode == NULL){
                 break;
         }
-        std::cout<<"上に参りまーす"<<std::endl;
+        //std::cout<<"上に参りまーす"<<std::endl;
         tmpnode = tmpnode->pRoot;                                               //現在のノードの親ノードに移る
         tmpblocknum =numberblock-1;                                             //上のノードに上がるのでブロックナンバーを初期化
-        std::cout<<tmpblocknum<<std::endl;
+        //std::cout<<tmpblocknum<<std::endl;
         if(tmpnode == NULL){
                 break;
         }
@@ -375,6 +374,37 @@ void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> 
    }
 }
 
+//パスツリーの中身を確認するための関数
+void Test::PathTreeTest(std::list<SNode> &child_list,int num_block){
+	auto itr = child_list.begin();                                          //leaflabelのノードにアクセスするためにイテレータの移動
+ 	SNode* TMPnode = itr->myAddr;                                           //*tmpnodeに現在のリーフノードのアドレスを渡している
+		
+	int TreeLevel=1;							//木の高さ
+	int PathLabel=1;							//パスのラベル
+	
+	for(int path=0;path<child_list.size();path++){				//パスごとに繰り返し
+		while(TMPnode != NULL){						//ノードごとに繰り返し
+			for(int BN=0;BN<num_block;BN++){			//ブロックごとに繰り返し
+				if(TMPnode->block[BN].addr !="0"){								//ダミー(アドレスが0)でないなら
+					std::cout<<"パス["<<PathLabel<<"]"<<std::endl;				//パスラベル
+					std::cout<<"木の高さ["<<TreeLevel<<"]"<<std::endl;			//木の高さ	
+					std::cout<<"ブロック番号["<<BN<<"]"<<std::endl;				//ブロック番号
+					std::cout<<"アドレス["<<TMPnode->block[BN].addr<<"]"<<std::endl;	//アドレス
+					std::cout<<"ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;		//ラベル
+				}
+				else{										//アドレスが０であるなら
+				}
+			}
+			TMPnode = TMPnode->pRoot;								//現在のノードを親にする
+			TreeLevel++;										//ツリーの高さをあげる		
+		}
+		//while文から出たとき(パスが変わるタイミング)
+		TreeLevel=1;
+		PathLabel++;
+		itr++;
+		TMPnode = itr->myAddr;
+	}
+}
 
 
 int main(){
@@ -386,11 +416,11 @@ int main(){
 	std::cout << "バケツ内のブロック数を入力してください"<< std::endl; 
 	std::cin >> PathZ;
 	Label =pow(2,PathL);	
-
 	//クラスのインスタンス化//
 	Perse perse;
 	PosMap positionmap;	
  	PathTree pathtree;
+	Test test;
 
 	//2分木を作成する関数//
 	int num_blocks = PathZ;
@@ -407,7 +437,7 @@ int main(){
 	pathtree.Pathmake(PathL,child_list,PathZ);
 
 	//入力トレースを読み込む関数//
-	std::ifstream ifs("mase.txt");						// ファイルの読み込み
+	std::ifstream ifs("test1.txt");						// ファイルの読み込み
 	if (ifs.fail())
 	{
 		std::cerr << "失敗" << std::endl;
@@ -416,22 +446,23 @@ int main(){
 /////////////////////////////////ループ開始部//////////////////////////////////////////////////////
 	while(std::getline(ifs,trace))						//1行ずつ読み込み
 	{
-		std::cout<<"----[命令]----"<<std::endl;
+		std::cout<<"[----[命令]----]"<<std::endl;
 		std::cout << "[" << trace << "]" << std::endl;			//1行ずつ標準出力
 		perse.cut(trace);						//入力からアドレス、命令タイプ、時刻を切り出す関数
 
 	//*perse.a[0] アドレス ,perse.a[1] 命令タイプ ,perse.a[2] サイクル数
 	//std::map<std::string, int >mp;//文字列→整数の連想配列
-		std::cout<<"["<<mp[perse.a[0]]<<"]"<<std::endl;
+		//std::cout<<"OldLabel = "<<"["<<mp[perse.a[0]]<<"]"<<std::endl;
 		positionmap.OldLabel= mp[perse.a[0]];				//メモリアドレスのリーフラベルを取得する関数
-		std::cout<<"OldLabelは"<<positionmap.OldLabel<<std::endl;
+		std::cout<<"OldLabelは "<<positionmap.OldLabel<<std::endl;
 
 		std::random_device rnd;
 		std::mt19937 mt(rnd());
 		std::uniform_int_distribution<> randLabel(1,Label);
 		mp[perse.a[0]]=randLabel(mt); 					//アドレスのラベルを更新する関数
-		std::cout <<mp[perse.a[0]]<<"\n";
+		//std::cout <<mp[perse.a[0]]<<"\n";
 		positionmap.NewLabel = mp[perse.a[0]];
+		std::cout<<"NewLabelは "<<positionmap.NewLabel<<std::endl;
 	//ポジションマップにアドレスが登録されているか確認
 	if(positionmap.OldLabel==0){						//ポジションマップにリーフラベルが登録されていない場合
 		std::cout<<"登録されていない"<<std::endl;
@@ -442,8 +473,35 @@ int main(){
 		std::cout<<"登録済み"<<std::endl;
 		pathtree.TraceToRoot(positionmap.OldLabel,stash_list,child_list,PathZ,perse.a[0],positionmap.NewLabel);						//パス読み込み関数
 		pathtree.PathUpdate(positionmap.OldLabel,PathZ,2,child_list,stash_list);									//パスを更新する関数
-
 	}
+	std::cout<<"=============テスト結果============="<<std::endl;
+	//(stashにあるやつ全部だし)
+	test.PathTreeTest(child_list,PathZ);
+	
+	auto itr4 =child_list.begin();
+	SNode* tnode = itr4->myAddr;
+	std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+	tnode = itr4->myAddr;
+	std::cout<<tnode->block[1].addr<<std::endl;	
+ 	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
+	itr4++;
+        tnode = itr4->myAddr;
+        std::cout<<tnode->block[1].addr<<std::endl;
 
 
 	}

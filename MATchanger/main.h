@@ -82,3 +82,14 @@ public:
 	int Rightchecker(SNode* checkNode);						//パス書き込みで各ノードに格納可能な右側リーフラベルを調べる関数
 };
 
+class Test{
+public:
+//変数
+	int num_block;
+
+//関数
+     	void PathTreeTest(std::list<SNode> &child_list,int num_block);				//パスツリーの各データの所在を確かめる
+
+};
+
+
