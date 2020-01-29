@@ -19,6 +19,7 @@ struct Block										//データブロック宣言
 		std::string addr;							//アドレス
 		int label;								//リーフラベル
 		Block *blockAddr;							//ブロックの自アドレス		
+		int check;								//check用数
 	};
 struct SNode										//ノードの宣言
 	{	

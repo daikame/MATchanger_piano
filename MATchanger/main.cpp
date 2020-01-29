@@ -1,5 +1,5 @@
 #include"main.h"
-#define Fname "/home/dai/git/MATchanger_piano/MATchanger/ver1/output_trace"
+#define Fname "/home/dai/git/MATchanger_piano/MATchanger/output_trace"
 
 
 void Perse::fileopen(std::string filename){					//ファイルを読み込む関数	
@@ -60,6 +60,7 @@ void PathTree::InitNodeL(SNode& updateNode,SNode& tmpNode,int numberblock){
         updateNode.block[t].label=0;                                            //子ノードのラベルの初期化
         updateNode.block[t].blockAddr=&updateNode.block[t];                     //自アドレスにそのデータブロックの実アドレスを格納
         updateNode.hand = "left";                                               //左の手から生まれた子
+	updateNode.block[t].check =0;							//テスト用
    }
 }
 void PathTree::InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock){
@@ -70,6 +71,7 @@ void PathTree::InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock){
         updateNode.block[t].label=0;                                            //子ノードのラベルの初期化
         updateNode.block[t].blockAddr=&updateNode.block[t];                     //自アドレスにそのデータブロックの実アドレスを格納
         updateNode.hand = "right";                                              //右の手から生まれた子
+	updateNode.block[t].check =0;							//テスト用
    }
 }
 
@@ -162,6 +164,7 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
                         //std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
                         break;                                                  //ちっちゃいfor文抜ける
                 }
+		std::cout<<"kaisuu"<<std::endl;
         }
         if(tmpnode->block[s].addr==address){
                 break;
@@ -201,9 +204,10 @@ void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<
                 }
 
                 //アクセス中のパスを空っぽにするための操作
-                tmpnode->block[p].addr="0";                                     //パス内のブロックのアドレスとラベルを０にしてブロックを空にする
-                if(cleancounter!=0){                                                    //葉ノード以外のノードのブロックのラベルは0にする
+                tmpnode->block[p].addr="0";                                     //パス内のブロックのアドレスとラベルを０にしてブロックを空にする	
+                if(cleancounter!=0){                                            //葉ノード以外のノードのブロックのラベルは0にする
                         tmpnode->block[p].label=0;
+			tmpnode->block[p].check=0;				//check用関数
                 }
 
                 if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
@@ -381,22 +385,27 @@ void Test::PathTreeTest(std::list<SNode> &child_list,int num_block){
 		
 	int TreeLevel=1;							//木の高さ
 	int PathLabel=1;							//パスのラベル
-	
+	std::cout<<"***パスツリーの変化部分"<<std::endl;
 	for(int path=0;path<child_list.size();path++){				//パスごとに繰り返し
 		while(TMPnode != NULL){						//ノードごとに繰り返し
-			for(int BN=0;BN<num_block;BN++){			//ブロックごとに繰り返し
-				if(TMPnode->block[BN].addr !="0"){								//ダミー(アドレスが0)でないなら
-					std::cout<<"パス["<<PathLabel<<"]"<<std::endl;				//パスラベル
-					std::cout<<"木の高さ["<<TreeLevel<<"]"<<std::endl;			//木の高さ	
-					std::cout<<"ブロック番号["<<BN<<"]"<<std::endl;				//ブロック番号
-					std::cout<<"アドレス["<<TMPnode->block[BN].addr<<"]"<<std::endl;	//アドレス
-					std::cout<<"ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;		//ラベル
+			for(int BN=0;BN<num_block;BN++){								//ブロックごとに繰り返し
+				if(TMPnode->block[BN].check==0){							//check用
+					if(TMPnode->block[BN].addr !="0"){						//ダミー(アドレスが0)でないなら
+						std::cout<<"パス["<<PathLabel<<"]"<<" 木の高さ["<<TreeLevel<<"]"<<" ブロック番号["<<BN<<"]"<<" アドレス["<<TMPnode->block[BN].addr<<"]"<<" ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;				//パスラベル 木の高さ　ブロック番号　アドレス　ラベル　
+						//std::cout<<"木の高さ["<<TreeLevel<<"]"<<std::endl;			//木の高さ	
+						//std::cout<<"ブロック番号["<<BN<<"]"<<std::endl;				//ブロック番号
+						//std::cout<<"アドレス["<<TMPnode->block[BN].addr<<"]"<<std::endl;	//アドレス
+						//std::cout<<"ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;	//ラベル
+						TMPnode->block[BN].check++;						//チェックを増やす
+					}
+					else{										//アドレスが０であるなら
+					}
 				}
-				else{										//アドレスが０であるなら
+				else{
 				}
 			}
-			TMPnode = TMPnode->pRoot;								//現在のノードを親にする
-			TreeLevel++;										//ツリーの高さをあげる		
+			TMPnode = TMPnode->pRoot;									//現在のノードを親にする
+			TreeLevel++;											//ツリーの高さをあげる		
 		}
 		//while文から出たとき(パスが変わるタイミング)
 		TreeLevel=1;
@@ -477,7 +486,7 @@ int main(){
 	std::cout<<"=============テスト結果============="<<std::endl;
 	//(stashにあるやつ全部だし)
 	test.PathTreeTest(child_list,PathZ);
-	
+	/*
 	auto itr4 =child_list.begin();
 	SNode* tnode = itr4->myAddr;
 	std::cout<<tnode->block[1].addr<<std::endl;
@@ -502,7 +511,7 @@ int main(){
 	itr4++;
         tnode = itr4->myAddr;
         std::cout<<tnode->block[1].addr<<std::endl;
-
+	*/
 
 	}
 	return 0;
