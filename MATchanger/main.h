@@ -67,6 +67,7 @@ public:
 	SNode updateNode;								//InitNode 
 	SNode tmpNode;									//InitNode Allocatechild
 	std::string address;								//PathWrite TraceToRoot
+	std::string time;								//PathWrite
 	int leaflabel;									//PathWrite TraceToRoot
 	int GB;										//PathUpdate
 	SNode checkNode;								//Leftchceker Rightchecker
@@ -76,8 +77,8 @@ public:
 	void InitNodeL(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
 	void InitNodeR(SNode& updateNode,SNode& tmpNode,int numberblock);		//ノードの初期化関数
 	void AllocateChild(SNode* tmpNode,std::list<SNode> &child_list,int numberblock);//２つの子を生成する関数
-	void PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock);							//初パス書き込み関数
-	void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel);	//パス読み込み関数
+	void PathWrite(std::string address,std::string time,int leaflabel,std::list<SNode> &child_list,int numberblock);							//初パス書き込み関数
+	void TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,std::string time,int NewLabel);	//パス読み込み関数
 	void PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> &child_list,std::list<Block> &stash_list);				//パス更新する関数
 	int Leftchecker(SNode* checkNode);						//パス書き込みで各ノードに格納可能な左側リーフラベルを調べる関数
 	int Rightchecker(SNode* checkNode);						//パス書き込みで各ノードに格納可能な右側リーフラベルを調べる関数

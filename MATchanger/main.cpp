@@ -133,7 +133,7 @@ void PathTree::Pathmake(int depth,std::list<SNode> &child_list,int numberblock){
 }
 
 //初パス書き込み
-void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &child_list,int numberblock){
+void PathTree::PathWrite(std::string address,std::string time,int leaflabel,std::list<SNode> &child_list,int numberblock){
    std::ofstream ofs(Fname, std::ios::app);					//ファイルオープン
    if(!ofs)
    {
@@ -141,7 +141,8 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
         //std::cin.get();
         return ;
    }	
-   ofs << address <<" READ"<<std::endl;						//トレースファイルに出力
+   ofs << address <<" READ  "<<time<<std::endl;						//トレースファイルに出力
+  
    ofs.close();   
    //std::cout<<"たのむよいｙいおｙ"<<std::endl;
    auto itr = child_list.begin();                                               //leaflabelのノードにアクセスするためにイテレータの移動
@@ -175,7 +176,7 @@ void PathTree::PathWrite(std::string address,int leaflabel,std::list<SNode> &chi
 }
 
 //パス読み込み関数 
-void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,int NewLabel){     //本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
+void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<SNode> &child_list,int numberblock,std::string address,std::string time,int NewLabel){     //本物のリクエストのアドレスはスタッシュに読み込む際、ラベルを新しいものに変える
 
    std::ofstream ofs(Fname, std::ios::app);                                     //ファイルオープン 
    if(!ofs)
@@ -211,7 +212,7 @@ void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<
                 }
 
                 if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
-                ofs <<tmpblock.addr<<" READ"<<std::endl;                        //トレースファイルの出力
+                ofs <<tmpblock.addr<<" READ  "<<time<<std::endl;                        //トレースファイルの出力
 		//std::cout<<"トレースファイルに書き込みました。"<<std::endl;
                 stash_list.push_back(tmpblock);                                 //スタッシュにデータブロックを格納していく
                 stashin++;
@@ -269,7 +270,7 @@ void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> 
 
         ////スタッシュの先頭からあるラベルのブロックを抽出して詰める
         std::list<Block> possibleblock_list;                                    //抽出されたブロックを格納するリスト
-        std::cout<<"スタッシュサイズ"<<stash_list.size()<<std::endl;
+        //std::cout<<"スタッシュサイズ"<<stash_list.size()<<std::endl;
         for(auto itr1 = stash_list.begin();itr1 != stash_list.end();++itr1){
                 //std::cout<<"stashにあるやつ"<<itr1->addr<<std::endl;
                 if(leftside<=itr1->label && itr1->label<=rightside && tmpnode->block[tmpblocknum].addr=="0"){                           //stash_listから取り出したブロックのラベルがleftside以上rightside以下であるか否か
@@ -280,7 +281,7 @@ void PathTree::PathUpdate(int leaflabel,int numberblock,int GB,std::list<SNode> 
                         --itr1;                                                 //itr1が正しく動くように
 
                         if(tmpblocknum==0){                                     //現在のブロックの番号が0ならfor文から抜ける
-                                std::cout<<"このノードにはもう格納できません"<<std::endl;
+                                //std::cout<<"このノードにはもう格納できません"<<std::endl;
                                 break;
                         }
                         else{
@@ -420,6 +421,7 @@ int main(){
 
 	
 	//入力パラメータの宣言//
+	std::cout<<"＝＝＝＝＝＝＝＝＝＝＝＝＝シミュレーションを開始する＝＝＝＝＝＝＝＝＝＝＝＝＝"<<std::endl;
 	std::cout << "二分木の高さを入力してください"<< std::endl; 
 	std::cin >> PathL;
 	std::cout << "バケツ内のブロック数を入力してください"<< std::endl; 
@@ -446,7 +448,7 @@ int main(){
 	pathtree.Pathmake(PathL,child_list,PathZ);
 
 	//入力トレースを読み込む関数//
-	std::ifstream ifs("test1.txt");						// ファイルの読み込み
+	std::ifstream ifs("mase.txt");						// ファイルの読み込み
 	if (ifs.fail())
 	{
 		std::cerr << "失敗" << std::endl;
@@ -476,42 +478,16 @@ int main(){
 	if(positionmap.OldLabel==0){						//ポジションマップにリーフラベルが登録されていない場合
 		std::cout<<"登録されていない"<<std::endl;
 		//(アクセスされたアドレスのみを書き込む関数)
-		pathtree.PathWrite(perse.a[0],positionmap.NewLabel,child_list,PathZ);										//パス内の1ノードのみを更新する関数
+		pathtree.PathWrite(perse.a[0],perse.a[2],positionmap.NewLabel,child_list,PathZ);										//パス内の1ノードのみを更新する関数
 	}
 	else{									//ポジションマップにリーフラベルが登録されている場合
 		std::cout<<"登録済み"<<std::endl;
-		pathtree.TraceToRoot(positionmap.OldLabel,stash_list,child_list,PathZ,perse.a[0],positionmap.NewLabel);						//パス読み込み関数
+		pathtree.TraceToRoot(positionmap.OldLabel,stash_list,child_list,PathZ,perse.a[0],perse.a[2],positionmap.NewLabel);						//パス読み込み関数
 		pathtree.PathUpdate(positionmap.OldLabel,PathZ,2,child_list,stash_list);									//パスを更新する関数
 	}
 	std::cout<<"=============テスト結果============="<<std::endl;
-	//(stashにあるやつ全部だし)
-	test.PathTreeTest(child_list,PathZ);
-	/*
-	auto itr4 =child_list.begin();
-	SNode* tnode = itr4->myAddr;
-	std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-	tnode = itr4->myAddr;
-	std::cout<<tnode->block[1].addr<<std::endl;	
- 	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	itr4++;
-        tnode = itr4->myAddr;
-        std::cout<<tnode->block[1].addr<<std::endl;
-	*/
+	std::cout<<"スタッシュサイズは"<<stash_list.size()<<std::endl;				//(stashにあるやつ全部だし)
+	test.PathTreeTest(child_list,PathZ);					//パスツリーの書きかえたところ全部出す
 
 	}
 	return 0;
