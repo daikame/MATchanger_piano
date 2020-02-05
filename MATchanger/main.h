@@ -91,7 +91,7 @@ public:
 
 //関数
      	void PathTreeTest(std::list<SNode> &child_list,int num_block);				//パスツリーの各データの所在を確かめる
-
+	void PathTreeAll(std::list<SNode> &child_list,int num_block);				//パスツリーすべてのブロックを出すための関数
 };
 
 

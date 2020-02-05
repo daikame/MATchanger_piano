@@ -165,7 +165,7 @@ void PathTree::PathWrite(std::string address,std::string time,int leaflabel,std:
                         //std::cout<<"[]"<<tmpnode->block[s].addr<<std::endl;
                         break;                                                  //ちっちゃいfor文抜ける
                 }
-		std::cout<<"kaisuu"<<std::endl;
+		//std::cout<<"kaisuu"<<std::endl;
         }
         if(tmpnode->block[s].addr==address){
                 break;
@@ -206,10 +206,11 @@ void PathTree::TraceToRoot(int leaflabel,std::list<Block> &stash_list,std::list<
 
                 //アクセス中のパスを空っぽにするための操作
                 tmpnode->block[p].addr="0";                                     //パス内のブロックのアドレスとラベルを０にしてブロックを空にする	
-                if(cleancounter!=0){                                            //葉ノード以外のノードのブロックのラベルは0にする
-                        tmpnode->block[p].label=0;
-			tmpnode->block[p].check=0;				//check用関数
-                }
+              	if(cleancounter!=0){			                                        //葉ノード以外のノードのブロックのラベルは0にする
+             	tmpnode->block[p].label=0;
+		}
+		tmpnode->block[p].check=0;					//check用関数
+                
 
                 if(tmpblock.addr != "0"){                                       //ダミー以外のデータのパス読み込み（アドレスが0のものはダミーであることを明記する）     
                 ofs <<tmpblock.addr<<" READ  "<<time<<std::endl;                        //トレースファイルの出力
@@ -393,10 +394,6 @@ void Test::PathTreeTest(std::list<SNode> &child_list,int num_block){
 				if(TMPnode->block[BN].check==0){							//check用
 					if(TMPnode->block[BN].addr !="0"){						//ダミー(アドレスが0)でないなら
 						std::cout<<"パス["<<PathLabel<<"]"<<" 木の高さ["<<TreeLevel<<"]"<<" ブロック番号["<<BN<<"]"<<" アドレス["<<TMPnode->block[BN].addr<<"]"<<" ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;				//パスラベル 木の高さ　ブロック番号　アドレス　ラベル　
-						//std::cout<<"木の高さ["<<TreeLevel<<"]"<<std::endl;			//木の高さ	
-						//std::cout<<"ブロック番号["<<BN<<"]"<<std::endl;				//ブロック番号
-						//std::cout<<"アドレス["<<TMPnode->block[BN].addr<<"]"<<std::endl;	//アドレス
-						//std::cout<<"ラベル["<<TMPnode->block[BN].label<<"]\n"<<std::endl;	//ラベル
 						TMPnode->block[BN].check++;						//チェックを増やす
 					}
 					else{										//アドレスが０であるなら
@@ -414,6 +411,29 @@ void Test::PathTreeTest(std::list<SNode> &child_list,int num_block){
 		itr++;
 		TMPnode = itr->myAddr;
 	}
+}
+//パスツリーをすべて確認するための関数
+void Test::PathTreeAll(std::list<SNode> &child_list,int num_block){
+        auto itr = child_list.begin();                                          //leaflabelのノードにアクセスするためにイテレータの移動
+        SNode* TMPnode = itr->myAddr;                                           //*tmpnodeに現在のリーフノードのアドレスを渡している
+
+        int TreeLevel=1;                                                        //木の高さ
+        int PathLabel=1;                                                        //パスのラベル
+        std::cout<<"***パスツリーの変化部分"<<std::endl;
+        for(int path=0;path<child_list.size();path++){                          //パスごとに繰り返し
+                while(TMPnode != NULL){                                         //ノードごとに繰り返し
+                        for(int BN=0;BN<num_block;BN++){                        //ブロックごとに繰り返し
+                                        	TMPnode->block[BN].check=0;
+                        }
+                        TMPnode = TMPnode->pRoot;                                                                       //現在のノードを親にする
+                        TreeLevel++;                                                                                    //ツリーの高さをあげる          
+                }
+                //while文から出たとき(パスが変わるタイミング)
+                TreeLevel=1;
+                PathLabel++;
+                itr++;
+                TMPnode = itr->myAddr;
+        }
 }
 
 
@@ -488,7 +508,7 @@ int main(){
 	std::cout<<"=============テスト結果============="<<std::endl;
 	std::cout<<"スタッシュサイズは"<<stash_list.size()<<std::endl;				//(stashにあるやつ全部だし)
 	test.PathTreeTest(child_list,PathZ);					//パスツリーの書きかえたところ全部出す
-
+	test.PathTreeAll(child_list,PathZ);//check初期化(この関数を使うとツリー全体が出てくるようにする)
 	}
 	return 0;
 
